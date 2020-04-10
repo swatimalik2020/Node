@@ -1,9 +1,10 @@
 const mssqlConnection = require('../configuration/db');
 const productQueries = require('../configuration/scripts');
 const Product = require('../models/productModel');
+const mssql = require('mssql');
 
 exports.getProducts = (request,response,next) => {
-   let mssqlRequest = new mssqlConnection.Request();
+   let mssqlRequest = new mssql.Request(mssqlConnection);
    mssqlRequest.query(productQueries.getAllProducts,(error,result)=>{
       if(error){
          console.error('Error occurred adding product',error.stack);
@@ -19,26 +20,42 @@ exports.getProducts = (request,response,next) => {
 
 exports.createProduct = (request,response,next) => {
    const product = new Product(request.body.name,request.body.id);
-   let mssqlRequest = new mssqlConnection.Request();
-   mssqlRequest.input('nameInsert',request.body.name);
-   mssqlRequest.query(productQueries.createProduct,(error,result)=>{
-      if(error){
-         console.error('Error occurred adding product',error.stack);
-         response.status(500).json({message:'Error occurred during product creation. Please connect to application administrator'});
+   let mssqlTransaction  = new mssql.Transaction(mssqlConnection);
+   mssqlTransaction.begin((transactionError)=> {
+      if (transactionError) {
+         console.error('Error occurred adding product', transactionError.stack);
+         response.status(500).json({message: 'Error occurred during product creation. Please connect to application administrator'});
          return;
       }
-      product.id = result.rowsAffected;
-      let responseJson = {
-         message: 'Product is successfully created.',
-         product: product
-      };
-      response.status(201).json(responseJson);
+      const mssqlRequest = new mssql.Request(mssqlTransaction);
+      mssqlRequest.input('nameInsert', request.body.name);
+      mssqlRequest.query(productQueries.createProduct,(requestError,result)=>{
+         if(requestError){
+            console.error('Error occurred adding product',requestError.stack);
+            response.status(500).json({message:'Error occurred during product creation. Please connect to application administrator'});
+            return;
+         }
+         mssqlTransaction.commit((commitError)=> {
+            if(commitError){
+               console.error('Error occurred adding product',commitError.stack);
+               response.status(500).json({message:'Error occurred during product creation. Please connect to application administrator'});
+               return;
+            }
+            product.id = result.affectedRows;
+            let responseJson = {
+               message: 'Product is successfully created.',
+               product: product
+            };
+            response.status(201).json(responseJson);
+         });
+      });
    });
 };
 
 exports.deleteProduct = (request,response,next) => {
-   let mssqlRequest = new mssqlConnection.Request();
-   mssqlRequest.query(productQueries.deleteProduct,[request.params.productId],(error,results,fields)=>{
+   let mssqlRequest = new mssql.Request(mssqlConnection);
+   mssqlRequest.input('idDelete',request.params.productId);
+   mssqlRequest.query(productQueries.deleteProduct,(error,results)=>{
       if(error){
          console.error('Error occurred deleting product',error.stack);
          response.status(500).json({message:'Error occurred during product deletion. Please connect to application administrator'});
@@ -58,8 +75,10 @@ exports.deleteProduct = (request,response,next) => {
 };
 
 exports.updateProduct = (request,response,next) => {
-   let mssqlRequest = new mssqlConnection.Request();
-   mssqlRequest.query(productQueries.updateProduct,[request.body.name,request.params.productId],(error,results,fields)=>{
+   let mssqlRequest = new mssql.Request(mssqlConnection);
+   mssqlRequest.input('idUpdate',request.params.productId);
+   mssqlRequest.input('nameUpdate',request.body.name);
+   mssqlRequest.query(productQueries.updateProduct,(error,results,fields)=>{
       if(error){
          console.error('Error occurred updating product',error.stack);
          response.status(500).json({message:'Error occurred during product update. Please connect to application administrator'});

@@ -6,7 +6,7 @@ const createProduct = 'INSERT INTO product(name) VALUES (@nameInsert)';
 
 const deleteProduct = 'DELETE FROM product WHERE id = (@idDelete)';
 
-const updateProduct = 'UPDATE product SET name=@nameUpdate where id=@idUpdate';
+const updateProduct = 'UPDATE product SET name=(@nameUpdate) where id=(@idUpdate)';
 
 module.exports = {productTable:productTable,
     getAllProducts:getAllProducts,

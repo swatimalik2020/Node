@@ -1,4 +1,5 @@
 const mssql = require('mssql');
+
 let dbConfig= {
     user: 'sa',
     password: 'Winter2019',
@@ -6,7 +7,8 @@ let dbConfig= {
     database: 'malik'
 };
 
-mssql.connect(dbConfig,(error)=>{
+let dbConnection = new mssql.ConnectionPool(dbConfig);
+dbConnection.connect((error)=>{
     if(error) {
         console.error('Error occurred during connecting database: ' + error.stack);
         return;
@@ -14,4 +16,4 @@ mssql.connect(dbConfig,(error)=>{
     console.log('Database connection is successful');
 });
 
-module.exports = mssql;
+module.exports = dbConnection;
