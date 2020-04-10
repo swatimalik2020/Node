@@ -1,12 +1,12 @@
-const productTable = 'CREATE TABLE product(id bigint auto_increment,name char(50),PRIMARY KEY (id))';
+const productTable = 'CREATE TABLE product(id INT NOT NULL IDENTITY PRIMARY KEY ,name char(50) NOT NULL)';
 
 const getAllProducts = 'SELECT * FROM product';
 
-const createProduct = 'INSERT INTO product SET ?';
+const createProduct = 'INSERT INTO product(name) VALUES (@nameInsert)';
 
-const deleteProduct = 'DELETE FROM product WHERE id = ?';
+const deleteProduct = 'DELETE FROM product WHERE id = (@idDelete)';
 
-const updateProduct = 'UPDATE product SET name=? where id=?';
+const updateProduct = 'UPDATE product SET name=@nameUpdate where id=@idUpdate';
 
 module.exports = {productTable:productTable,
     getAllProducts:getAllProducts,

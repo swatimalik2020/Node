@@ -1,13 +1,12 @@
-const mysql = require('mysql2');
+const mssql = require('mssql');
+let dbConfig= {
+    user: 'sa',
+    password: 'Winter2019',
+    server: 'localhost',
+    database: 'malik'
+};
 
-let mysqlConnection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'Malik',
-    database: 'mysql'
-});
-
-mysqlConnection.connect((error)=>{
+mssql.connect(dbConfig,(error)=>{
     if(error) {
         console.error('Error occurred during connecting database: ' + error.stack);
         return;
@@ -15,4 +14,4 @@ mysqlConnection.connect((error)=>{
     console.log('Database connection is successful');
 });
 
-module.exports = mysqlConnection;
+module.exports = mssql;
